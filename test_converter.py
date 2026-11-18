@@ -1,6 +1,6 @@
 import unittest
 
-from converter import convert
+from converter import convert, parse_rates_payload
 
 RATES = {"USD": 1.0, "CAD": 1.37, "THB": 34.25}
 
@@ -22,6 +22,22 @@ class ConvertTests(unittest.TestCase):
     def test_negative_amount_raises(self):
         with self.assertRaises(ValueError):
             convert(-5, "USD", "CAD", RATES)
+
+
+class LiveRatesTests(unittest.TestCase):
+    def test_parses_successful_payload(self):
+        payload = {"result": "success", "base_code": "USD", "rates": {"USD": 1, "CAD": 1.37}}
+        base, rates = parse_rates_payload(payload)
+        self.assertEqual(base, "USD")
+        self.assertEqual(rates["CAD"], 1.37)
+
+    def test_rejects_failed_payload(self):
+        with self.assertRaises(ValueError):
+            parse_rates_payload({"result": "error"})
+
+    def test_rejects_missing_rates(self):
+        with self.assertRaises(ValueError):
+            parse_rates_payload({"result": "success", "base_code": "USD"})
 
 
 if __name__ == "__main__":
